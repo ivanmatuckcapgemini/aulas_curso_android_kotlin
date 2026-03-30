@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Projeto27_03</string>
+    <string name="login_title">Tela de Login</string>
+    <string name="login_instructions">Escolha um perfil para entrar no app.</string>
+    <string name="login_profile_prompt">Perfis disponíveis:</string>
+    <string name="admin_profile_button">Entrar como Administrador</string>
+    <string name="client_profile_button">Entrar como Cliente</string>
+    <string name="logout_button">Sair</string>
+    <string name="saved_user_type">Tipo salvo: %1$s</string>
+    <plurals name="orders_loaded_success">
+        <item quantity="one">1 pedido foi carregado com sucesso</item>
+        <item quantity="other">%d pedidos foram carregados com sucesso</item>
+    </plurals>
 </resources>

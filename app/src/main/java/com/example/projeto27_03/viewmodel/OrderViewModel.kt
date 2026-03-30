@@ -41,9 +41,7 @@ class OrderViewModel : ViewModel() {
             try{
                 val orders = repository.getOrders(false)
                 _uiState.value = OrderUiState.Success(orders)
-//                    orders.size
-
-                _effect.emit(OrderEffect.ShowSnackbar("Pedidos carregados com sucesso"))
+                _effect.emit(OrderEffect.ShowOrdersLoaded(orders.size))
             }catch (e: Exception){
 
                 _uiState.value = OrderUiState.Error(

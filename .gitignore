@@ -1,15 +1,38 @@
+# Android Studio / IntelliJ
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# Gradle / build outputs
+.gradle/
+build/
+**/build/
+.kotlin/
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Android local configuration
 local.properties
+/local.properties
+
+# macOS / Linux
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# Logs / temporary files
+*.log
+*.tmp
+*.temp
+
+# Optional: keep local signing keys out of version control
+# *.jks
+# *.keystore
