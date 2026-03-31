@@ -1,52 +1,70 @@
 package com.example.projeto27_03.data
 
 import android.content.Context
-import androidx.core.content.edit
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+// Nome do arquivo interno onde o DataStore vai persistir os valores.
+private const val PREFS_NAME = "app_preferences"
 
 // Responsável por centralizar a leitura e escrita de dados simples no armazenamento local.
-// Aqui usamos SharedPreferences, que é indicado para valores pequenos, como flags booleanas
-// e textos curtos (por exemplo: "usuário logado" e "tipo de usuário").
-class PreferencesManager(context: Context) {
-    // Abre o arquivo de preferências do app.
-    // Context.MODE_PRIVATE garante que somente este aplicativo tenha acesso a esses dados.
-    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+// Agora usamos DataStore Preferences, que é a alternativa moderna e assíncrona ao SharedPreferences.
+// Ele é assíncrono, baseado em Flow e mais seguro para estados pequenos do app.
+private val Context.dataStore by preferencesDataStore(name = PREFS_NAME)
 
-    // Salva se o usuário está logado ou não.
-    // Esse valor pode ser usado, por exemplo, para decidir se a tela inicial será login ou home.
-    fun saveLoginState(isLogged: Boolean) {
-        prefs.edit {
-            putBoolean(KEY_IS_LOGGED, isLogged)
-        }
+class PreferencesManager(private val context: Context) {
+    // As chaves do DataStore são tipadas. Isso reduz erros de chave errada e melhora a leitura do código.
+    private val isLoggedKey = booleanPreferencesKey(KEY_IS_LOGGED)
+    private val userTypeKey = stringPreferencesKey(KEY_USER_TYPE)
+
+    // Flow do estado de login.
+    // Sempre que o valor for alterado, a UI que coleta esse Flow pode se recompor automaticamente.
+    val loginStateFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[isLoggedKey] ?: false
     }
 
-    // Lê o estado de login salvo anteriormente.
-    // Se ainda não existir nada gravado, o valor padrão será 'false'.
-    fun getLoginState(): Boolean = prefs.getBoolean(KEY_IS_LOGGED, false)
+    // Flow do tipo de usuário salvo.
+    // Se nada tiver sido gravado ainda, retornamos string vazia para não propagar null.
+    val userTypeStateFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[userTypeKey] ?: DEFAULT_USER_TYPE
+    }
+
+    // Salva se o usuário está logado ou não.
+    // DataStore usa coroutines, então essa operação é suspend para deixar a gravação assíncrona.
+    suspend fun saveLoginState(isLogged: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[isLoggedKey] = isLogged
+        }
+    }
 
     // Salva o tipo de usuário selecionado ou autenticado.
     // Exemplo de uso: "admin", "cliente", "motorista" etc.
-    fun saveUserTypeState(userType: String) {
-        prefs.edit {
-            putString(KEY_USER_TYPE, userType)
+    suspend fun saveUserTypeState(userType: String) {
+        context.dataStore.edit { preferences ->
+            val normalizedUserType = userType.trim()
+
+            if (normalizedUserType.isBlank()) {
+                preferences.remove(userTypeKey)
+            } else {
+                preferences[userTypeKey] = normalizedUserType
+            }
         }
     }
 
-    // Lê o tipo de usuário salvo.
-    // Se a chave ainda não existir, retornamos uma string vazia para evitar null no restante do código.
-    fun getUserTypeState(): String = prefs.getString(KEY_USER_TYPE, DEFAULT_USER_TYPE) ?: DEFAULT_USER_TYPE
-
-    // Limpa os dados da sessão em um único lugar.
-    // Isso é útil no logout, porque remove tanto a marca de login quanto o perfil salvo.
-    fun clearSession() {
-        prefs.edit {
-            remove(KEY_IS_LOGGED)
-            remove(KEY_USER_TYPE)
+    // Remove a sessão do usuário de uma vez.
+    // Isso é útil no logout, porque apaga tanto a marca de login quanto o perfil salvo.
+    suspend fun clearSession() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(isLoggedKey)
+            preferences.remove(userTypeKey)
         }
     }
 
     companion object {
-        // Nome do arquivo interno onde os valores serão armazenados.
-        private const val PREFS_NAME = "app_preferences"
         // Chave usada para persistir se o usuário já está autenticado.
         private const val KEY_IS_LOGGED = "is_logged"
         // Chave usada para persistir o tipo/perfil do usuário.
