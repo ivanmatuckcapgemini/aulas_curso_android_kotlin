@@ -1,10 +1,13 @@
 package com.example.projeto27_03.data
 
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 class OrderRepository {
     suspend fun getOrders(shouldFail: Boolean): List<Order> {
-        delay(2000)
+        // Mantemos a simulação de rede, mas com uma espera menor para o app ficar mais leve
+        // durante a navegação e a coleta de pedidos.
+        delay(800L.milliseconds)
 
         if(shouldFail){
             throw Exception("Erro ao buscar pedido!")
@@ -12,7 +15,7 @@ class OrderRepository {
         return listOf(
             Order(1, "Katia Kotlin", 89.90),
             Order(2, "Constancia Compose",9.90),
-            Order(2, "Vilson ViewModel", 12.0)
+            Order(3, "Vilson ViewModel", 12.0)
         )
     }
 }

@@ -7,10 +7,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projeto27_03.data.PreferencesManager
 import com.example.projeto27_03.ui.screen.LoginScreen
 import com.example.projeto27_03.ui.screen.OrderScreen
 import com.example.projeto27_03.ui.theme.Projeto27_03Theme
+import com.example.projeto27_03.viewmodel.LoginUiState
+import com.example.projeto27_03.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -18,15 +21,27 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // PreferencesManager centraliza o acesso ao DataStore do app.
-        // Agora ele usa DataStore, que é assíncrono e expõe Flow para a UI acompanhar mudanças.
+        // PreferencesManager continua cuidando do perfil do usuário (admin/cliente).
+        // Já o token de sessão fica no LoginViewModel/DataStoreManager, evitando misturar
+        // responsabilidades de autenticação com preferências pedagógicas da tela.
         val preferencesManager = PreferencesManager(this)
 
         setContent {
-            // Coletamos os Flows do DataStore para que a UI reflita qualquer alteração persistida.
-            val isLogged by preferencesManager.loginStateFlow.collectAsState(initial = false)
+            // O ViewModel de login simula a autenticação e persiste o token em DataStore.
+            // Ao observar o token como State, a tela muda automaticamente quando o login termina.
+            val loginViewModel: LoginViewModel = viewModel()
+            val sessionToken by loginViewModel.token.collectAsState()
+            val loginUiState by loginViewModel.uiState.collectAsState()
+
+            // Mantemos o tipo de usuário em uma preferência separada para reforçar o exercício
+            // sobre saveUserTypeState e leitura reativa via Flow.
             val savedUserType by preferencesManager.userTypeStateFlow.collectAsState(initial = "")
             val scope = rememberCoroutineScope()
+
+            // O token é a fonte de verdade para saber se existe sessão ativa.
+            val isLogged = !sessionToken.isNullOrBlank()
+            val isLoginLoading = loginUiState is LoginUiState.Loading
+            val loginErrorMessage = (loginUiState as? LoginUiState.Error)?.message
 
             Projeto27_03Theme {
                 if (isLogged) {
@@ -38,19 +53,22 @@ class MainActivity : ComponentActivity() {
                             // Ao sair, limpamos os dados persistidos e voltamos para o login.
                             scope.launch {
                                 preferencesManager.clearSession()
+                                loginViewModel.logout()
                             }
                         }
                     )
                 } else {
                     // Se não estiver logado, mostramos a tela de login didática.
                     LoginScreen(
+                        isLoading = isLoginLoading,
+                        errorMessage = loginErrorMessage,
                         onLoginClick = { userType ->
-                            // Aqui aplicamos o conceito do print:
-                            // 1) salvamos o tipo de usuário
-                            // 2) marcamos a sessão como logada
+                            // Aqui aplicamos o conceito do print e do esquema de token:
+                            // 1) salvamos o tipo de usuário para manter o estudo do estado local
+                            // 2) executamos o login simulado que grava o token no DataStore
                             scope.launch {
                                 preferencesManager.saveUserTypeState(userType)
-                                preferencesManager.saveLoginState(true)
+                                loginViewModel.login("user", "password")
                             }
                         }
                     )
