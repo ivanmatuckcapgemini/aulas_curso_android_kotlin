@@ -44,6 +44,7 @@ private fun buildOrdersLoadedMessage(context: Context, count: Int): String {
 fun OrderScreen(
     userType: String = "",
     onLogout: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
     viewModel: OrderViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,6 +88,14 @@ fun OrderScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = stringResource(R.string.logout_button))
+            }
+
+            // Atalho simples para a tela de configurações de tema.
+            Button(
+                onClick = onOpenSettings,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = stringResource(R.string.open_settings_button))
             }
 
             Spacer(modifier = Modifier.height(16.dp))

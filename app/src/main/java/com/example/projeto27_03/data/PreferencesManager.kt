@@ -20,6 +20,7 @@ class PreferencesManager(private val context: Context) {
     // As chaves do DataStore são tipadas. Isso reduz erros de chave errada e melhora a leitura do código.
     private val isLoggedKey = booleanPreferencesKey(KEY_IS_LOGGED)
     private val userTypeKey = stringPreferencesKey(KEY_USER_TYPE)
+    private val themeKey = stringPreferencesKey(KEY_THEME)
 
     // Flow do estado de login.
     // Sempre que o valor for alterado, a UI que coleta esse Flow pode se recompor automaticamente.
@@ -31,6 +32,12 @@ class PreferencesManager(private val context: Context) {
     // Se nada tiver sido gravado ainda, retornamos string vazia para não propagar null.
     val userTypeStateFlow: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[userTypeKey] ?: DEFAULT_USER_TYPE
+    }
+
+    // Flow do tema selecionado.
+    // O DataStore guarda String, mas expomos um enum para evitar erros na UI.
+    val themeModeFlow: Flow<ThemeMode> = context.dataStore.data.map { preferences ->
+        ThemeMode.fromStorage(preferences[themeKey] ?: DEFAULT_THEME)
     }
 
     // Salva se o usuário está logado ou não.
@@ -55,6 +62,14 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    // Salva o tema escolhido pelo usuário.
+    // Aqui normalizamos a String e garantimos que apenas valores válidos sejam persistidos.
+    suspend fun saveTheme(theme: ThemeMode) {
+        context.dataStore.edit { preferences ->
+            preferences[themeKey] = theme.storageValue
+        }
+    }
+
     // Remove a sessão do usuário de uma vez.
     // Isso é útil no logout, porque apaga tanto a marca de login quanto o perfil salvo.
     suspend fun clearSession() {
@@ -69,8 +84,12 @@ class PreferencesManager(private val context: Context) {
         private const val KEY_IS_LOGGED = "is_logged"
         // Chave usada para persistir o tipo/perfil do usuário.
         private const val KEY_USER_TYPE = "user_type"
+        // Chave usada para persistir o tema selecionado.
+        private const val KEY_THEME = "app_theme"
         // Valor padrão caso ainda não exista nenhum tipo gravado.
         private const val DEFAULT_USER_TYPE = ""
+        // Valor padrão caso o usuário ainda não tenha escolhido um tema.
+        const val DEFAULT_THEME = "SYSTEM"
     }
 }
 

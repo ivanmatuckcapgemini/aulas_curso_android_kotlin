@@ -7,6 +7,14 @@
     <string name="client_profile_button">Entrar como Cliente</string>
     <string name="logout_button">Sair</string>
     <string name="saved_user_type">Tipo salvo: %1$s</string>
+    <string name="open_settings_button">Configurações</string>
+    <string name="settings_title">Configurações de Tema</string>
+    <string name="settings_subtitle">Escolha como o aplicativo deve se comportar com a iluminação.</string>
+    <string name="settings_light">Tema Claro</string>
+    <string name="settings_dark">Tema Escuro</string>
+    <string name="settings_system">Tema do Sistema</string>
+    <string name="settings_example_button">Botão Exemplo do Tema</string>
+    <string name="settings_back_button">Voltar</string>
     <plurals name="orders_loaded_success">
         <item quantity="one">1 pedido foi carregado com sucesso</item>
         <item quantity="other">%d pedidos foram carregados com sucesso</item>
