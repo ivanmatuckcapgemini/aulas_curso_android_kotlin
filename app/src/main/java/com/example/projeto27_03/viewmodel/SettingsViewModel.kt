@@ -5,50 +5,106 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projeto27_03.data.PreferencesManager
 import com.example.projeto27_03.data.ThemeMode
+import com.example.projeto27_03.ui.theme.ColorProfile
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 // ViewModel responsável por isolar a lógica de tema da camada de UI.
-// Ele conversa com o PreferencesManager e expõe o tema como StateFlow.
+// Ele conversa com o PreferencesManager e expõe o estado salvo e o estado em edição.
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val preferencesManager = PreferencesManager(application)
 
-    // O tema é lido do DataStore via Flow e transformado em StateFlow para a UI.
-    // Também entregamos a preferencia já mapeada para a escolha de tema.
-    val themeUiState: StateFlow<ThemeUiState> = preferencesManager.themeModeFlow
-        .map { mode ->
-            ThemeUiState(
-                mode = mode,
-                useDarkTheme = when (mode) {
-                    ThemeMode.LIGHT -> false
-                    ThemeMode.DARK -> true
-                    ThemeMode.SYSTEM -> null
-                }
-            )
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ThemeUiState(ThemeMode.SYSTEM, null)
-        )
+    private val savedThemeMode: StateFlow<ThemeMode> = preferencesManager.themeModeFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = ThemeMode.SYSTEM
+    )
 
-    // Salva o tema escolhido pelo usuário.
-    // A UI apenas dispara a ação, sem conhecer detalhes de persistência.
-    fun onThemeSelected(theme: ThemeMode) {
+    private val savedColorProfile: StateFlow<ColorProfile> = preferencesManager.colorProfileFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = ColorProfile.OCEAN
+    )
+
+    private val pendingThemeMode = MutableStateFlow(savedThemeMode.value)
+    private val pendingColorProfile = MutableStateFlow(savedColorProfile.value)
+
+    init {
         viewModelScope.launch {
-            preferencesManager.saveTheme(theme)
+            savedThemeMode.collect { pendingThemeMode.value = it }
+        }
+        viewModelScope.launch {
+            savedColorProfile.collect { pendingColorProfile.value = it }
+        }
+    }
+
+    val settingsUiState: StateFlow<SettingsUiState> = combine(
+        savedThemeMode,
+        savedColorProfile,
+        pendingThemeMode,
+        pendingColorProfile
+    ) { savedTheme, savedProfile, selectedTheme, selectedProfile ->
+        SettingsUiState(
+            savedThemeMode = savedTheme,
+            savedColorProfile = savedProfile,
+            selectedThemeMode = selectedTheme,
+            selectedColorProfile = selectedProfile,
+            hasThemeChanges = savedTheme != selectedTheme,
+            hasColorProfileChanges = savedProfile != selectedProfile
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = SettingsUiState(
+            savedThemeMode = ThemeMode.SYSTEM,
+            savedColorProfile = ColorProfile.OCEAN,
+            selectedThemeMode = ThemeMode.SYSTEM,
+            selectedColorProfile = ColorProfile.OCEAN,
+            hasThemeChanges = false,
+            hasColorProfileChanges = false
+        )
+    )
+
+    fun onThemeSelected(theme: ThemeMode) {
+        pendingThemeMode.value = theme
+    }
+
+    fun onColorProfileSelected(colorProfile: ColorProfile) {
+        pendingColorProfile.value = colorProfile
+    }
+
+    fun confirmThemeChanges() {
+        val selectedTheme = pendingThemeMode.value
+        if (savedThemeMode.value == selectedTheme) return
+
+        viewModelScope.launch {
+            preferencesManager.saveTheme(selectedTheme)
+        }
+    }
+
+    fun confirmColorProfileChanges() {
+        val selectedColorProfile = pendingColorProfile.value
+        if (savedColorProfile.value == selectedColorProfile) return
+
+        viewModelScope.launch {
+            preferencesManager.saveColorProfile(selectedColorProfile)
         }
     }
 }
 
-// Estado simples que a UI consome para aplicar o tema atual.
-data class ThemeUiState(
-    val mode: ThemeMode,
-    val useDarkTheme: Boolean?
+// Estado da tela de configurações, separando os valores salvos dos valores em edição.
+data class SettingsUiState(
+    val savedThemeMode: ThemeMode,
+    val savedColorProfile: ColorProfile,
+    val selectedThemeMode: ThemeMode,
+    val selectedColorProfile: ColorProfile,
+    val hasThemeChanges: Boolean,
+    val hasColorProfileChanges: Boolean
 )
 
 

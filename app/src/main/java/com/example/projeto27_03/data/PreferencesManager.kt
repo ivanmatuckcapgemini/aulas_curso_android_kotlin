@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.projeto27_03.ui.theme.ColorProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -21,6 +22,7 @@ class PreferencesManager(private val context: Context) {
     private val isLoggedKey = booleanPreferencesKey(KEY_IS_LOGGED)
     private val userTypeKey = stringPreferencesKey(KEY_USER_TYPE)
     private val themeKey = stringPreferencesKey(KEY_THEME)
+    private val colorProfileKey = stringPreferencesKey(KEY_COLOR_PROFILE)
 
     // Flow do estado de login.
     // Sempre que o valor for alterado, a UI que coleta esse Flow pode se recompor automaticamente.
@@ -38,6 +40,11 @@ class PreferencesManager(private val context: Context) {
     // O DataStore guarda String, mas expomos um enum para evitar erros na UI.
     val themeModeFlow: Flow<ThemeMode> = context.dataStore.data.map { preferences ->
         ThemeMode.fromStorage(preferences[themeKey] ?: DEFAULT_THEME)
+    }
+
+    // Flow do perfil de cores selecionado.
+    val colorProfileFlow: Flow<ColorProfile> = context.dataStore.data.map { preferences ->
+        ColorProfile.fromStorage(preferences[colorProfileKey] ?: DEFAULT_COLOR_PROFILE)
     }
 
     // Salva se o usuário está logado ou não.
@@ -70,6 +77,13 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    // Salva o perfil de cores escolhido pelo usuário.
+    suspend fun saveColorProfile(colorProfile: ColorProfile) {
+        context.dataStore.edit { preferences ->
+            preferences[colorProfileKey] = colorProfile.storageValue
+        }
+    }
+
     // Remove a sessão do usuário de uma vez.
     // Isso é útil no logout, porque apaga tanto a marca de login quanto o perfil salvo.
     suspend fun clearSession() {
@@ -86,10 +100,14 @@ class PreferencesManager(private val context: Context) {
         private const val KEY_USER_TYPE = "user_type"
         // Chave usada para persistir o tema selecionado.
         private const val KEY_THEME = "app_theme"
+        // Chave usada para persistir o perfil de cores selecionado.
+        private const val KEY_COLOR_PROFILE = "color_profile"
         // Valor padrão caso ainda não exista nenhum tipo gravado.
         private const val DEFAULT_USER_TYPE = ""
         // Valor padrão caso o usuário ainda não tenha escolhido um tema.
         const val DEFAULT_THEME = "SYSTEM"
+        // Valor padrão caso o usuário ainda não tenha escolhido um perfil de cores.
+        const val DEFAULT_COLOR_PROFILE = "OCEAN"
     }
 }
 

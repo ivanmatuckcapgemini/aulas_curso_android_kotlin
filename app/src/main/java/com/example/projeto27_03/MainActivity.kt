@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +43,7 @@ class MainActivity : ComponentActivity() {
             // sobre saveUserTypeState e leitura reativa via Flow.
             val savedUserType by preferencesManager.userTypeStateFlow.collectAsState(initial = "")
             val settingsViewModel: SettingsViewModel = viewModel()
-            val themeUiState by settingsViewModel.themeUiState.collectAsState()
+            val settingsUiState by settingsViewModel.settingsUiState.collectAsState()
             val scope = rememberCoroutineScope()
             var showSettings by remember { mutableStateOf(false) }
 
@@ -52,9 +53,8 @@ class MainActivity : ComponentActivity() {
             val loginErrorMessage = (loginUiState as? LoginUiState.Error)?.message
 
             Projeto27_03Theme(
-                darkTheme = themeUiState.useDarkTheme
-                    ?: androidx.compose.foundation.isSystemInDarkTheme(),
-                dynamicColor = false
+                darkTheme = settingsUiState.savedThemeMode.effectiveDarkTheme(isSystemInDarkTheme()),
+                colorProfile = settingsUiState.savedColorProfile
             ) {
                 if (isLogged) {
                     // Se já existe uma sessão salva, mostramos a tela principal.
