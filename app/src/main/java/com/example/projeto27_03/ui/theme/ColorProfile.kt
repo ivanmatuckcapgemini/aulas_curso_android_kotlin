@@ -11,6 +11,7 @@ enum class ColorProfile(
     private val lightScheme: ColorScheme,
     private val darkScheme: ColorScheme
 ) {
+    // Perfil inspirado em tons de oceano para um visual frio e estável.
     OCEAN(
         storageValue = "OCEAN",
         displayName = "Oceano",
@@ -35,6 +36,7 @@ enum class ColorProfile(
             error = Color(0xFFFFB4AB)
         )
     ),
+    // Perfil mais quente, útil para contrastar com o tema anterior.
     SUNSET(
         storageValue = "SUNSET",
         displayName = "Pôr do sol",
@@ -59,6 +61,7 @@ enum class ColorProfile(
             error = Color(0xFFFFB4AB)
         )
     ),
+    // Perfil esverdeado que ajuda a enxergar variações em tons naturais.
     FOREST(
         storageValue = "FOREST",
         displayName = "Floresta",
@@ -83,6 +86,7 @@ enum class ColorProfile(
             error = Color(0xFFFFB4AB)
         )
     ),
+    // Perfil roxo para demonstrar um terceiro conjunto visual bem distinto.
     VIOLET(
         storageValue = "VIOLET",
         displayName = "Violeta",
@@ -109,10 +113,12 @@ enum class ColorProfile(
     );
 
     fun colorScheme(darkTheme: Boolean): ColorScheme {
+        // A composição escolhe entre a paleta clara ou escura do perfil ativo.
         return if (darkTheme) darkScheme else lightScheme
     }
 
     fun previewColors(darkTheme: Boolean): List<Color> {
+        // A prévia destaca cores fundamentais do esquema para o aluno comparar rapidamente.
         val scheme = colorScheme(darkTheme)
         return listOf(
             scheme.primary,
@@ -128,6 +134,7 @@ enum class ColorProfile(
 
     companion object {
         fun fromStorage(value: String): ColorProfile {
+            // Se o valor salvo não for reconhecido, retornamos um padrão seguro.
             return entries.firstOrNull { it.storageValue == value } ?: OCEAN
         }
     }

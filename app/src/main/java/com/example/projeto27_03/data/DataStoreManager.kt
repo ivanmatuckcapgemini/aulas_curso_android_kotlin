@@ -26,6 +26,7 @@ class DataStoreManager(private val context: Context) {
     // A operação é suspend porque DataStore grava de forma assíncrona.
     suspend fun saveToken(token: String) {
         context.dataStore.edit { preferences ->
+            // Escrevemos o token em um único ponto para centralizar a persistência.
             preferences[TOKEN_KEY] = token
         }
     }
@@ -33,6 +34,7 @@ class DataStoreManager(private val context: Context) {
     // Remove o token salvo, efetivamente deslogando o usuário.
     suspend fun clearToken() {
         context.dataStore.edit { preferences ->
+            // Remover a chave é suficiente para representar a ausência de sessão.
             preferences.remove(TOKEN_KEY)
         }
     }

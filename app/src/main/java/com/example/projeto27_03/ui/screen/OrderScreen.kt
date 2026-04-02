@@ -40,6 +40,7 @@ private fun buildOrdersLoadedMessage(context: Context, count: Int): String {
     return context.resources.getQuantityString(R.plurals.orders_loaded_success, count, count)
 }
 
+@Suppress("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun OrderScreen(
     userType: String = "",
@@ -47,11 +48,14 @@ fun OrderScreen(
     onOpenSettings: () -> Unit = {},
     viewModel: OrderViewModel = viewModel()
 ) {
+    // A tela observa estado e efeitos separadamente: um para renderização contínua e outro para mensagens pontuais.
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // SnackbarHostState permite exibir feedback sem poluir o estado principal da tela.
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
+    // Efeitos são coletados uma única vez para evitar repetição de mensagens em recomposição.
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when(effect){
@@ -69,21 +73,22 @@ fun OrderScreen(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         }
-    ) {
+    ) { contentPadding ->
+        // O conteúdo principal também é rolável para acomodar lista, botões e mensagens.
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(contentPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Este bloco mostra o tipo de usuário recuperado das preferências.
-            // Ele ajuda a visualizar o efeito do saveUserTypeState/getUserTypeState.
+            // Exibe o tipo de usuário salvo para reforçar o uso de DataStore no login.
             if (userType.isNotBlank()) {
                 Text(text = stringResource(R.string.saved_user_type, userType))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Botão de saída: limpa o estado persistido e retorna a interface para o login.
+            // Botão de saída: limpa o token e devolve o fluxo à tela de login.
             Button(
                 onClick = onLogout,
                 modifier = Modifier.fillMaxWidth()
@@ -91,7 +96,7 @@ fun OrderScreen(
                 Text(text = stringResource(R.string.logout_button))
             }
 
-            // Atalho simples para a tela de configurações de tema.
+            // Atalho para a tela de configurações, onde o aluno explora tema e perfil de cores.
             Button(
                 onClick = onOpenSettings,
                 modifier = Modifier.fillMaxWidth()
@@ -109,6 +114,7 @@ fun OrderScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
+            // O when reflete o ciclo de vida da lista: parado, carregando, sucesso ou erro.
             when(state){
                 OrderUiState.Idle ->{
                     Text("Clique para carregar os pedidos")
@@ -144,6 +150,7 @@ fun OrderScreen(
 
 @Composable
 fun OrderList(orders: List<Order>) {
+    // A lista é mostrada em coluna porque a tela principal já está rolável como um todo.
     Column {
         orders.forEach { order ->
             Column(

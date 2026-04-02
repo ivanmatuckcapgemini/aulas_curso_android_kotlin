@@ -1,27 +1,9 @@
 package com.example.projeto27_03.ui.screen
 
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,10 +13,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.border
-import androidx.compose.foundation.background
-import androidx.compose.foundation.verticalScroll
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projeto27_03.R
 import com.example.projeto27_03.data.ThemeMode
@@ -46,11 +24,16 @@ fun SettingsScreen(
     onBack: () -> Unit,
     viewModel: SettingsViewModel = viewModel()
 ) {
+    // A tela trabalha com estado reativo: sempre que o usuário muda uma opção,
+    // a prévia e os botões de confirmação respondem imediatamente.
     val uiState by viewModel.settingsUiState.collectAsState()
+    // O tema da própria tela de configurações acompanha a seleção em edição.
     val previewDarkTheme = uiState.selectedThemeMode.effectiveDarkTheme(isSystemInDarkTheme())
     val previewColorScheme = uiState.selectedColorProfile.colorScheme(previewDarkTheme)
     val typography = MaterialTheme.typography
 
+    // Envolvemos o conteúdo em MaterialTheme para que a prévia mostre o perfil
+    // de cores escolhido sem precisar navegar para outra tela.
     MaterialTheme(
         colorScheme = previewColorScheme,
         typography = typography
@@ -67,14 +50,17 @@ fun SettingsScreen(
                 text = stringResource(R.string.settings_title),
                 style = MaterialTheme.typography.headlineSmall
             )
+            // Explica o objetivo da tela para o aluno entender que aqui há duas decisões separadas.
             Text(text = stringResource(R.string.settings_subtitle))
 
+            // Seção responsável apenas pelo modo claro/escuro/sistema.
             Text(
                 text = stringResource(R.string.settings_theme_section_title),
                 style = MaterialTheme.typography.titleMedium
             )
             Text(text = stringResource(R.string.settings_theme_section_subtitle))
 
+            // Cada card representa uma escolha exclusiva de tema.
             ThemeModeOptionRow(
                 label = stringResource(R.string.settings_light),
                 isSelected = uiState.selectedThemeMode == ThemeMode.LIGHT,
@@ -91,6 +77,8 @@ fun SettingsScreen(
                 onSelect = { viewModel.onThemeSelected(ThemeMode.SYSTEM) }
             )
 
+            // A confirmação do tema só fica habilitada quando há diferença entre o salvo
+            // e o que está sendo editado na tela.
             Button(
                 onClick = { viewModel.confirmThemeChanges() },
                 enabled = uiState.hasThemeChanges,
@@ -109,8 +97,10 @@ fun SettingsScreen(
                 text = stringResource(R.string.settings_color_profiles_title),
                 style = MaterialTheme.typography.titleMedium
             )
+            // Aqui o aluno escolhe apenas o perfil visual do Material3.
             Text(text = stringResource(R.string.settings_color_profiles_subtitle))
 
+            // O conjunto abaixo mantém a seleção única por checkbox, mas com aparência de card.
             ColorProfileOptionRow(
                 label = ColorProfile.OCEAN.displayName,
                 isSelected = uiState.selectedColorProfile == ColorProfile.OCEAN,
@@ -132,6 +122,7 @@ fun SettingsScreen(
                 onSelect = { viewModel.onColorProfileSelected(ColorProfile.VIOLET) }
             )
 
+            // A grade em 4 colunas mostra a paleta do perfil selecionado em tempo real.
             Text(
                 text = stringResource(R.string.settings_preview_title),
                 style = MaterialTheme.typography.titleMedium
@@ -151,9 +142,11 @@ fun SettingsScreen(
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
+                // Este botão confirma apenas o perfil de cores, separadamente do tema.
                 Text(text = stringResource(R.string.settings_confirm_color_profile_button))
             }
 
+            // Espaço inferior extra para evitar que o botão final fique colado ao fim da tela.
             OutlinedButton(
                 onClick = onBack,
                 modifier = Modifier
@@ -172,6 +165,7 @@ private fun ThemeModeOptionRow(
     isSelected: Boolean,
     onSelect: () -> Unit
 ) {
+    // Card clicável torna a seleção mais evidente e confortável em telas pequenas.
     Card(
         onClick = onSelect,
         modifier = Modifier.fillMaxWidth(),
@@ -191,6 +185,7 @@ private fun ThemeModeOptionRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(
+                // O checkbox reforça visualmente a seleção única da opção escolhida.
                 checked = isSelected,
                 onCheckedChange = { checked ->
                     if (checked) onSelect()
@@ -208,6 +203,7 @@ private fun ColorProfileOptionRow(
     isSelected: Boolean,
     onSelect: () -> Unit
 ) {
+    // A lógica é a mesma do tema, mas com cor secundária para diferenciar visualmente a seção.
     Card(
         onClick = onSelect,
         modifier = Modifier.fillMaxWidth(),
@@ -227,6 +223,7 @@ private fun ColorProfileOptionRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(
+                // Mantemos o padrão de interação por toque em toda a linha do card.
                 checked = isSelected,
                 onCheckedChange = { checked ->
                     if (checked) onSelect()
@@ -242,6 +239,7 @@ private fun ColorProfileOptionRow(
 private fun ThemePreviewGrid(
     colors: List<Color>
 ) {
+    // A prévia é quebrada em linhas de quatro círculos para atender ao layout pedido.
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         colors.chunked(4).forEach { rowColors ->
             Row(

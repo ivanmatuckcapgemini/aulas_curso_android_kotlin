@@ -24,6 +24,7 @@ fun LoginScreen(
     errorMessage: String?,
     onLoginClick: (String) -> Unit
 ) {
+    // A tela é rolável para manter usabilidade em aparelhos menores e quando o teclado abrir.
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -34,14 +35,14 @@ fun LoginScreen(
         // Título pedagógico da tela.
         Text(text = stringResource(R.string.login_title))
 
-        // Texto explicando ao aluno o que precisa ser feito.
+        // Explica ao aluno qual comportamento deve ser observado neste fluxo.
         Text(text = stringResource(R.string.login_instructions))
 
-        // Nesta atividade, em vez de digitar o perfil, o usuário escolhe uma das opções.
-        // Isso deixa o fluxo mais claro e mostra como salvar um valor fixo no DataStore.
+        // Em vez de uma entrada textual livre, usamos botões fixos para reforçar o conceito
+        // de seleção de perfil e persistência de estado simples.
         Text(text = stringResource(R.string.login_profile_prompt))
 
-        // O indicador de progresso evita a sensação de que o app travou durante o login simulado.
+        // Enquanto a autenticação simulada acontece, mostramos um indicador de progresso.
         if (isLoading) {
             CircularProgressIndicator()
             Text(text = "Validando login... aguarde um instante.")
@@ -52,6 +53,7 @@ fun LoginScreen(
             Text(text = errorMessage)
         }
 
+        // Cada botão dispara o mesmo fluxo de autenticação, mas com perfis diferentes.
         Button(
             onClick = { onLoginClick("admin") },
             modifier = Modifier.fillMaxWidth(),
@@ -68,8 +70,7 @@ fun LoginScreen(
             Text(text = stringResource(R.string.client_profile_button))
         }
 
-        // Não usamos um botão de confirmação separado porque cada opção já representa o login.
-        // Ao tocar em um perfil, o estado é salvo e a tela principal é exibida.
+        // Não usamos botão extra de confirmação porque a escolha já é a própria ação de login.
         Spacer(modifier = Modifier.height(4.dp))
     }
 }

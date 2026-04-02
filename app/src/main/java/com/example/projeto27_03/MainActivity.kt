@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Edge-to-edge permite que o conteúdo se comporte bem em telas modernas e com barras do sistema.
         enableEdgeToEdge()
 
         // PreferencesManager continua cuidando do perfil do usuário (admin/cliente).
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
         val preferencesManager = PreferencesManager(this)
 
         setContent {
+            // A composição principal reage aos estados de autenticação, usuário e preferências de tema.
             // O ViewModel de login simula a autenticação e persiste o token em DataStore.
             // Ao observar o token como State, a tela muda automaticamente quando o login termina.
             val loginViewModel: LoginViewModel = viewModel()
@@ -56,6 +58,7 @@ class MainActivity : ComponentActivity() {
                 darkTheme = settingsUiState.savedThemeMode.effectiveDarkTheme(isSystemInDarkTheme()),
                 colorProfile = settingsUiState.savedColorProfile
             ) {
+                // O fluxo do app é simples: login -> pedidos -> configurações opcionais.
                 if (isLogged) {
                     // Se já existe uma sessão salva, mostramos a tela principal.
                     // O tipo de usuário é exibido para reforçar o vínculo com o DataStore.

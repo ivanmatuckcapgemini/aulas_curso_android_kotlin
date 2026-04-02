@@ -15,9 +15,12 @@ import kotlinx.coroutines.launch
 // Ele conversa com a fonte de login (AuthRepository) e com a persistência local (DataStoreManager).
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
+    // Cada dependência é mantida aqui para deixar o ViewModel responsável pela orquestração
+    // do fluxo, e não pela implementação detalhada de autenticação ou persistência.
     private val authRepository = AuthRepository()
     private val dataStoreManager = DataStoreManager(application)
 
+    // Estado transitório da tela: enquanto o login acontece, a UI mostra loading.
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState = _uiState.asStateFlow()
 
@@ -30,14 +33,18 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     fun login(username: String, password: String) {
         viewModelScope.launch {
+            // Primeiro avisamos a UI que a operação começou.
             _uiState.value = LoginUiState.Loading
 
+            // Depois delegamos a validação para o repositório.
             val result = authRepository.login(username, password)
 
             result.onSuccess { token ->
+                // Sucesso: persistimos o token e liberamos a UI para avançar.
                 dataStoreManager.saveToken(token)
                 _uiState.value = LoginUiState.Success
             }.onFailure { exception ->
+                // Falha: armazenamos a mensagem para exibição no layout.
                 _uiState.value = LoginUiState.Error(
                     exception.message ?: "Erro desconhecido"
                 )
@@ -47,6 +54,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     fun logout() {
         viewModelScope.launch {
+            // Logout aqui significa limpar o token e voltar o estado visual para o início.
             dataStoreManager.clearToken()
             _uiState.value = LoginUiState.Idle
         }
